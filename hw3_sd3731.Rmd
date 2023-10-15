@@ -228,3 +228,42 @@ Conclusion:
 The "spaghetti" plot displays the average crude prevalence of the "Excellent" response over time, with each line representing a different state. The plot reveals a relatively consistent crude prevalence from 2002 to 2010, indicating no substantial increase or decrease in this data value during that period.
 
 The boxplot illustrates the crude prevalence, referred to as `data_value`, for various responses ranging from "Poor" to "Excellent" in New York State for the years 2006 and 2010. In both years, the "Poor" response has the lowest crude prevalence, indicating fewer people reported their health as "Poor." The majority of respondents chose "Very good" or "Good" in both years. Notably, in 2010, a larger proportion of respondents selected "Very good" compared to 2006, suggesting a shift in health evaluations over time.
+
+# Problem 3
+
+## Data Manipulation
+
+Load, tidy, merge, and otherwise organize the data sets. Your final dataset should include all originally observed variables; exclude participants less than 21 years of age, and those with missing demographic data; and encode data with reasonable variable classes (i.e. not numeric, and using factors with the ordering of tables and plots in mind).
+
+```{r}
+accel <- 
+  read_csv("data/nhanes_accel.csv") |> 
+  janitor::clean_names() |> 
+  pivot_longer(
+    min1:min1440,
+    names_to = "min",
+    values_to = "accel_value",
+    names_prefix = "min") |> 
+  mutate(
+    min = as.numeric(min)
+  )
+
+covar <- 
+  read_csv("data/nhanes_covar.csv", skip = 4) |> 
+  janitor::clean_names() |> 
+  filter(age >= 21) |> 
+  mutate(
+    sex = case_match(
+      sex,
+      1 ~ "male",
+      2 ~ "female"),
+    sex = factor(
+      sex, 
+      levels = c("male", "female"))) |> 
+  drop_na()
+
+nhanes_df <-
+  inner_join(covar, accel)
+```
+
+The processed dataset called `nhanes_df` contains `r nrow(nhanes_df)` data entries and `r ncol(nhanes_df)` attributes. It encompasses MIMS values measured in minutes over a 24-hour period and also stores additional details like sequence number, age, gender, BMI, and education level.
