@@ -20,3 +20,8 @@ knitr::opts_chunk$set(
 library(tidyverse)
 library(p8105.datasets)
 ```
+# Problem 1
+
+```{r loading dataset}
+data("instacart")
+```
