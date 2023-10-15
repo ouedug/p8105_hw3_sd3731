@@ -92,9 +92,10 @@ instacart |>
   geom_point() +
   labs(y = "count", title = "Number of products ordered in aisle") +
   theme(axis.text.x = element_text(angle = 60, hjust = 1))
+
 ```
 
-Conclusion:
+Comments:
 There are `r nrow(slice1)` aisles where more than 10,000 items have been ordered.
 Among them, 2 aisles have witnessed orders of over 120,000 items.
 For 3 aisles, the number of ordered items falls within the range of 40,000 to 80,000.
