@@ -267,3 +267,79 @@ nhanes_df <-
 ```
 
 The processed dataset called `nhanes_df` contains `r nrow(nhanes_df)` data entries and `r ncol(nhanes_df)` attributes. It encompasses MIMS values measured in minutes over a 24-hour period and also stores additional details like sequence number, age, gender, BMI, and education level.
+
+## Answers
+
+1. Produce a reader-friendly table for the number of men and women in each education category, and create a visualization of the age distributions for men and women in each education category. Comment on these items.
+
+
+```{r count number of men and women by education category}
+nhanes_df |> 
+  select(seqn, sex, age, education) |> 
+  unique() |> 
+  group_by(sex, education) |> 
+  summarize(count = n()) |> 
+  pivot_wider(
+    names_from = sex,
+    values_from = count) |> 
+  knitr::kable()
+```
+
+Comments:
+For male participants, the distribution of education levels is as follows: More than high school > High school equivalent > Less than high school.
+Among female participants, the distribution of education levels is: More than high school > Less than high school > High school equivalent.
+
+```{r boxplot for age distribution}
+nhanes_df |> 
+  select(seqn, sex, age, education) |> 
+  unique() |> 
+  ggplot(aes(x = sex, y = age, color = sex)) +
+  geom_boxplot() +
+  labs(title = "Age distributions by education category for men and women") +
+  facet_grid(. ~ education)
+```
+
+Comments:
+The boxplot depicts age distributions for men and women within different education categories. Notably, individuals of both genders with education levels exceeding high school have the lowest median age compared to those in other education categories. Among females, those with a high school education exhibit the highest median age, while among males, individuals with education levels below high school have the highest median age. Furthermore, females with a high school education tend to be older than males with similar educational backgrounds.
+
+2. Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate across minutes to create a total activity variable for each participant. Plot these total activities (y-axis) against age (x-axis); your plot should compare men to women and have separate panels for each education level. Include a trend line or a smooth to illustrate differences. Comment on your plot.
+
+```{r total MIMS value vs. age}
+nhanes_df |> 
+  group_by(seqn, sex, age, education) |> 
+  summarize(accel_sum = sum(accel_value)) |> 
+  ggplot(aes(x = age, y = accel_sum, color = sex)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  facet_grid(. ~ education) +
+  labs(y = "total MIMS value", title = "Total MIMS value vs. age") +
+  theme(legend.position = "bottom")
+```
+
+Comments:
+The amount of activity exhibited by participants typically decreases as they grow older, with occasional instances of 1-2 peaks at specific ages. The range of fluctuations in activity among male participants is narrower compared to that among female participants.
+
+3. Accelerometer data allows the inspection activity over the course of the day. Make a three-panel plot that shows the 24-hour activity time courses for each education level and use color to indicate sex. Describe in words any patterns or conclusions you can make based on this graph; including smooth trends may help identify differences.
+
+```{r}
+nhanes_df |> 
+  group_by(min, sex, education) |> 
+  mutate(
+    mean_accel = mean(accel_value),
+    min = as.numeric(min)) |> 
+  select(sex, education, min, mean_accel) |> 
+  unique() |> 
+  ggplot(aes(x = min, y = mean_accel, color = sex)) +
+  geom_line() +
+  facet_grid(education ~ .) +
+  labs(y = "mean MIMS value", title = "Mean MIMS values in 24-hour activity time courses") +
+  theme(legend.position = "bottom")
+```
+
+Conclusion:
+The plot displays the average MIMS (Minutes in Motion Sensor) values over a 24-hour activity period for individuals of different education levels, separated by gender. The activity data is measured on a minute-by-minute basis, ranging from 1 to 1440 minutes in a day.
+
+The plot indicates that the average MIMS values generally decline during the first 5 hours (300 minutes), followed by an increase over the next 4 hours (approximately 250 minutes). Subsequently, in the following 6 hours, participants in education categories 1 and 2 show a gradual decline in MIMS activity, while those in education category 3 maintain a relatively stable level of activity. Finally, in the last 5 hours, the MIMS values decrease for all groups.
+
+Notably, it's observed that the average MIMS value for females in education category 3 is slightly higher than that of their male counterparts.
+
